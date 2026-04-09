@@ -11,6 +11,8 @@ Current implementation focus:
 - PostgreSQL-backed bookmarks and applications
 - local PostgreSQL via Docker Compose
 - SQL-file migration workflow
+- production-leaning API Docker build
+- simple GitHub Actions CI
 
 Not implemented yet:
 
@@ -100,6 +102,31 @@ $loginResponse = Invoke-WebRequest http://localhost:8080/auth/login -Method POST
 - `make test`
   Runs `go test ./...` for the API module.
 
+## CI Pipeline
+
+The GitHub Actions pipeline is intentionally simple:
+
+- run `go test ./...`
+- run `go build ./cmd/api`
+- build the API Docker image
+- on pushes to `main`, optionally push the image to Docker Hub if secrets are configured
+
+Image tagging strategy:
+
+- every published image gets a commit-based `sha-<full-sha>` tag
+- pushes from `main` also get a stable `main` tag
+
+This keeps deployments reviewable and reproducible without relying on `latest` alone.
+
+## Required GitHub Secrets
+
+Docker Hub publishing is optional. To enable it, configure these repository secrets:
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+
+The token should be a Docker Hub access token with permission to push to the target repository.
+
 ## Migration Workflow
 
 The migration path is intentionally simple:
@@ -166,6 +193,12 @@ The migration runner:
 
 - `services/api/internal/auth/auth.go`
   Contains password hashing, JWT generation, JWT validation, and auth claims handling.
+
+- `services/api/Dockerfile`
+  Defines the production-leaning multi-stage API image build.
+
+- `.github/workflows/api-ci.yml`
+  Defines the CI workflow for Go tests, Go build, Docker image build, and optional Docker Hub publish on `main`.
 
 - `.env.example`
   Shows the environment variables needed by both the API and the local PostgreSQL container.

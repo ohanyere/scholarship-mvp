@@ -1,0 +1,14 @@
+# Go caches
+services/api/.gomodcache/
+services/api/.gocache/
+
+# Environment
+.env
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Logs
+*.log
