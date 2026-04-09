@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: scholarship-platform
+  namespace: argocd
+spec:
+  project: scholarship-platform
+  source:
+    repoURL: https://github.com/ohanyere/scholarship-mvp.git
+    targetRevision: main
+    path: deploy/k8s/base
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: scholarship-platform
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

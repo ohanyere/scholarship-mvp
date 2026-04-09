@@ -127,6 +127,64 @@ Docker Hub publishing is optional. To enable it, configure these repository secr
 
 The token should be a Docker Hub access token with permission to push to the target repository.
 
+## Kubernetes Base Manifests
+
+Base manifests live in `deploy/k8s/base` and are designed to stay simple and readable:
+
+- one API Deployment and Service
+- one PostgreSQL Deployment and Service
+- one Redis Deployment and Service
+- one ConfigMap
+- one example Secret manifest
+- one Ingress
+
+Apply the base with:
+
+```powershell
+kubectl apply -k deploy/k8s/base
+```
+
+Before applying:
+
+1. create a real secret from `deploy/k8s/base/secret.example.yaml`
+2. set the API image in `deploy/k8s/base/api-deployment.yaml`
+
+Image reference guidance:
+
+- for shared environments, use a Docker Hub image such as `docker.io/<your-user>/scholarship-platform-api:main` or a commit-based tag
+- for local clusters, point the manifest at an image already loaded into the cluster runtime or your local registry
+- prefer immutable commit-based tags for repeatable deployments, and use `main` only as a convenience tag
+
+## ArgoCD Manifests
+
+ArgoCD manifests live in `deploy/argocd` and stay intentionally simple:
+
+- one `AppProject`
+- one `Application`
+- the Application points directly at `deploy/k8s/base`
+
+The ArgoCD Application targets:
+
+- cluster: `https://kubernetes.default.svc`
+- namespace: `scholarship-platform`
+- revision: `main`
+
+Before applying the ArgoCD manifests:
+
+1. update the GitHub repository URL in `deploy/argocd/project.yaml`
+2. update the same repository URL in `deploy/argocd/application.yaml`
+
+## GitOps Image Updates
+
+The intended GitOps flow is:
+
+1. GitHub Actions builds and optionally pushes a new API image
+2. the deployment manifest in Git is updated with the new image tag
+3. ArgoCD detects the Git change
+4. ArgoCD syncs the updated manifests into the cluster
+
+That means ArgoCD still treats Git as the source of truth. The image tag should be changed in Git, not manually in the cluster.
+
 ## Migration Workflow
 
 The migration path is intentionally simple:

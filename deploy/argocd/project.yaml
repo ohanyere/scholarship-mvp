@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: scholarship-platform
+  namespace: argocd
+spec:
+  description: Scholarship Platform MVP project
+  sourceRepos:
+    - https://github.com/ohanyere/scholarship-platform-mvp.git
+  destinations:
+    - namespace: scholarship-platform
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: ""
+      kind: Service
+    - group: "apps"
+      kind: Deployment
+    - group: "networking.k8s.io"
+      kind: Ingress
