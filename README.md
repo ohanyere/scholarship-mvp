@@ -104,12 +104,21 @@ $loginResponse = Invoke-WebRequest http://localhost:8080/auth/login -Method POST
 
 ## CI Pipeline
 
-The GitHub Actions pipeline is intentionally simple:
+The GitHub Actions pipeline is intentionally simple but DevSecOps-oriented:
 
 - run `go test ./...`
-- run `go build ./cmd/api`
+- run `go vet ./...`
+- lint the API Dockerfile with Hadolint
+- scan Terraform and Kubernetes manifests with Checkov
 - build the API Docker image
-- on pushes to `main`, optionally push the image to Docker Hub if secrets are configured
+- scan the built image with Trivy and fail on `HIGH` and `CRITICAL`
+- on pushes to `main`, push the image to a registry
+- update `deploy/k8s/base/api-deployment.yaml` with the new image tag and commit that change back to Git
+
+Trigger rules:
+
+- pull requests run lint, tests, scans, and image build only
+- pushes to `main` run the full pipeline, including image push and GitOps manifest update
 
 Image tagging strategy:
 
@@ -120,12 +129,18 @@ This keeps deployments reviewable and reproducible without relying on `latest` a
 
 ## Required GitHub Secrets
 
-Docker Hub publishing is optional. To enable it, configure these repository secrets:
+To enable registry push support, configure these repository secrets:
 
-- `DOCKERHUB_USERNAME`
-- `DOCKERHUB_TOKEN`
+- `CONTAINER_REGISTRY`
+  Example: `docker.io` or `ghcr.io`
+- `CONTAINER_REGISTRY_USERNAME`
+  Example: Docker Hub username or GitHub username
+- `CONTAINER_REGISTRY_TOKEN`
+  Example: Docker Hub access token or GHCR token
+- `IMAGE_REPOSITORY`
+  Example: `your-user/scholarship-platform-api` or `your-org/scholarship-platform-api`
 
-The token should be a Docker Hub access token with permission to push to the target repository.
+This keeps the workflow usable with Docker Hub or GHCR without maintaining two separate pipelines.
 
 ## Kubernetes Base Manifests
 
@@ -178,8 +193,8 @@ Before applying the ArgoCD manifests:
 
 The intended GitOps flow is:
 
-1. GitHub Actions builds and optionally pushes a new API image
-2. the deployment manifest in Git is updated with the new image tag
+1. GitHub Actions builds and pushes a new API image on `main`
+2. the workflow updates the image tag in `deploy/k8s/base/api-deployment.yaml`
 3. ArgoCD detects the Git change
 4. ArgoCD syncs the updated manifests into the cluster
 
@@ -256,7 +271,7 @@ The migration runner:
   Defines the production-leaning multi-stage API image build.
 
 - `.github/workflows/api-ci.yml`
-  Defines the CI workflow for Go tests, Go build, Docker image build, and optional Docker Hub publish on `main`.
+  Defines the DevSecOps workflow for linting, testing, IaC scanning, image scanning, image publishing, and GitOps manifest updates.
 
 - `.env.example`
   Shows the environment variables needed by both the API and the local PostgreSQL container.
