@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: scholarship-platform-config
+data:
+  APP_ENV: "kubernetes"
+  LOG_LEVEL: "info"
+  API_PORT: "8080"
+  API_BASE_URL: "http://scholarship-platform-api"
+  REQUEST_TIMEOUT: "15s"
+  SHUTDOWN_TIMEOUT: "10s"
+  POSTGRES_HOST: "scholarship-platform-postgres"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "scholarship_platform"
+  POSTGRES_USER: "scholarship_platform"
+  POSTGRES_SSLMODE: "disable"
+  REDIS_HOST: "scholarship-platform-redis"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  CACHE_TTL_SCHOLARSHIPS: "5m"
+  JWT_ACCESS_TOKEN_TTL: "15m"

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: scholarship-platform-postgres
+  labels:
+    app.kubernetes.io/name: scholarship-platform-postgres
+spec:
+  selector:
+    app.kubernetes.io/name: scholarship-platform-postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
