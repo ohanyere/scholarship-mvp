@@ -26,7 +26,13 @@ module "eks" {
   cluster_name       = var.cluster_name
   cluster_version    = var.cluster_version
   private_subnet_ids = module.vpc.private_subnet_ids
-  common_tags        = local.merged_tags
+
+  node_instance_type = var.node_instance_type
+  node_desired_size  = var.node_desired_size
+  node_min_size      = var.node_min_size
+  node_max_size      = var.node_max_size
+
+  common_tags = local.merged_tags
 }
 
 module "karpenter" {

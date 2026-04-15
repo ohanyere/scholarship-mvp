@@ -28,7 +28,7 @@ variable "endpoint_public_access" {
 variable "node_instance_type" {
   description = "Managed node group instance type."
   type        = string
-  default     = "t3.medium"
+  default     = "t3.small"
 }
 
 variable "node_desired_size" {

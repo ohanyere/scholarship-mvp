@@ -42,3 +42,23 @@ variable "common_tags" {
   description = "Common tags applied to all resources."
   type        = map(string)
 }
+
+variable "node_instance_type" {
+  description = "Instance type for the baseline managed node group."
+  type        = string
+}
+
+variable "node_desired_size" {
+  description = "Desired number of nodes in the baseline managed node group."
+  type        = number
+}
+
+variable "node_min_size" {
+  description = "Minimum number of nodes in the baseline managed node group."
+  type        = number
+}
+
+variable "node_max_size" {
+  description = "Maximum number of nodes in the baseline managed node group."
+  type        = number
+}
