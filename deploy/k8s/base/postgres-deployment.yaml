@@ -30,11 +30,6 @@ spec:
           ports:
             - name: postgres
               containerPort: 5432
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
           env:
             - name: POSTGRES_DB
               valueFrom:
