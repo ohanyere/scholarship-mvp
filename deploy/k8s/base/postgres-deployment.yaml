@@ -2,6 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: scholarship-platform-postgres
+  namespace: scholarship-platform
+  annotations:
+    checkov.io/skip1: CKV_K8S_22=Postgres needs a writable filesystem for database state and bootstrap, so read-only root filesystem is intentionally not enforced here.
+    checkov.io/skip2: CKV_K8S_23=The upstream Postgres image may need root-owned startup steps during bootstrap; forcing a non-root UID here risks breaking the current dev database.
+    checkov.io/skip3: CKV_K8S_40=We are intentionally not pinning a high UID for Postgres until we move to a hardened image and stateful storage setup validated for that runtime user.
   labels:
     app.kubernetes.io/name: scholarship-platform-postgres
 spec:
@@ -14,13 +19,22 @@ spec:
       labels:
         app.kubernetes.io/name: scholarship-platform-postgres
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: postgres
           image: postgres:16-alpine
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - name: postgres
               containerPort: 5432
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: POSTGRES_DB
               valueFrom:

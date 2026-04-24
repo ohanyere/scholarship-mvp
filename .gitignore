@@ -12,3 +12,5 @@ services/api/.gocache/
 
 # Logs
 *.log
+
+deploy/k8s/base/secret.yaml

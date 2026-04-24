@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgres-from-api
+  namespace: scholarship-platform
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: scholarship-platform-postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: scholarship-platform-api
+      ports:
+        - protocol: TCP
+          port: 5432

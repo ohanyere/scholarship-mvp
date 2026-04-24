@@ -2,6 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: scholarship-platform-api
+  namespace: scholarship-platform
   labels:
     app.kubernetes.io/name: scholarship-platform-api
   annotations:
