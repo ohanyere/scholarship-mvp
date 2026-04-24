@@ -21,7 +21,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: api
-          image: docker.io/kuberpull/scholarship-platform-api:sha-bf3316470a142ab76ca655dd107c7354178ad6af
+          image: docker.io/kuberpull/scholarship-platform-api:sha-b8803943690ab1d8284d173c8f4373c24f0074c5
           imagePullPolicy: Always
           ports:
             - name: http
