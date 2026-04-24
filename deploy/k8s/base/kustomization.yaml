@@ -16,4 +16,4 @@ resources:
   - allow-api-ingress-networkpolicy.yaml
   - allow-postgres-from-api-networkpolicy.yaml
   - allow-redis-from-api-networkpolicy.yaml
-  - secret.yaml
+ 
