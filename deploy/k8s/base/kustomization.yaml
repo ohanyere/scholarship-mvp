@@ -12,4 +12,4 @@ resources:
   - postgres-deployment.yaml
   - redis-service.yaml
   - redis-deployment.yaml
-  - ingress.yaml
+  - secret.yaml

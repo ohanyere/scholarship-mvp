@@ -1,6 +1,10 @@
+SHELL := /bin/bash
+
 COMPOSE_FILE := platform/docker-compose/docker-compose.yml
 ENV_FILE ?= .env
+ENV_FILE_ABS := $(abspath $(ENV_FILE))
 API_DIR := services/api
+GO_ENV := GOTELEMETRY=off GOCACHE=$(CURDIR)/$(API_DIR)/.gocache GOMODCACHE=$(CURDIR)/$(API_DIR)/.gomodcache GOTMPDIR=$(CURDIR)/$(API_DIR)/.tmp
 
 .PHONY: help db-up db-down migrate-up run-api test
 
@@ -19,10 +23,12 @@ db-down:
 	docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) down
 
 migrate-up:
-	powershell -ExecutionPolicy Bypass -File platform/scripts/migrate-up.ps1 -ComposeFile "$(COMPOSE_FILE)" -EnvFile "$(ENV_FILE)"
+	./platform/scripts/migrate-up.sh --compose-file "$(COMPOSE_FILE)" --env-file "$(ENV_FILE)"
 
 run-api:
-	powershell -ExecutionPolicy Bypass -Command "Set-Location '$(API_DIR)'; New-Item -ItemType Directory -Force .gocache, .gomodcache, .tmp | Out-Null; $$env:GOTELEMETRY='off'; $$env:GOCACHE=(Resolve-Path .gocache); $$env:GOMODCACHE=(Resolve-Path .gomodcache); $$env:GOTMPDIR=(Resolve-Path .tmp); go run ./cmd/api"
+	mkdir -p "$(API_DIR)/.gocache" "$(API_DIR)/.gomodcache" "$(API_DIR)/.tmp"
+	set -a; source "$(ENV_FILE_ABS)"; set +a; cd "$(API_DIR)" && $(GO_ENV) go run ./cmd/api
 
 test:
-	powershell -ExecutionPolicy Bypass -Command "Set-Location '$(API_DIR)'; New-Item -ItemType Directory -Force .gocache, .gomodcache, .tmp | Out-Null; $$env:GOTELEMETRY='off'; $$env:GOCACHE=(Resolve-Path .gocache); $$env:GOMODCACHE=(Resolve-Path .gomodcache); $$env:GOTMPDIR=(Resolve-Path .tmp); go test ./..."
+	mkdir -p "$(API_DIR)/.gocache" "$(API_DIR)/.gomodcache" "$(API_DIR)/.tmp"
+	cd "$(API_DIR)" && $(GO_ENV) go test ./...

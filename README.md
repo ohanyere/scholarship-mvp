@@ -30,59 +30,53 @@ Not implemented yet:
 ## Local Prerequisites
 
 - Go 1.24+
-- Docker Desktop or Docker Engine with Compose support
+- Docker Desktop or Docker Engine with the Docker Compose plugin
 - GNU Make
+- Bash, which is available by default in WSL Ubuntu and GitHub Actions Linux runners
 
 ## Local Startup Flow
 
 1. Copy the example environment file:
 
-```powershell
-Copy-Item .env.example .env
+```bash
+cp .env.example .env
 ```
 
 2. Start PostgreSQL and Redis:
 
-```powershell
+```bash
 make db-up
 ```
 
 3. Apply migrations:
 
-```powershell
+```bash
 make migrate-up
 ```
 
 4. Start the API:
 
-```powershell
+```bash
 make run-api
 ```
 
 5. In another terminal, verify the public scholarship endpoints:
 
-```powershell
-Invoke-WebRequest http://localhost:8080/healthz
-Invoke-WebRequest http://localhost:8080/scholarships
+```bash
+curl http://localhost:8080/healthz
+curl http://localhost:8080/scholarships
 ```
 
 6. Register a user and log in:
 
-```powershell
-$registerBody = @{
-  email = "user@example.com"
-  password = "password123"
-  full_name = "Scholarship User"
-} | ConvertTo-Json
+```bash
+curl -X POST http://localhost:8080/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password123","full_name":"Scholarship User"}'
 
-Invoke-WebRequest http://localhost:8080/auth/register -Method POST -ContentType "application/json" -Body $registerBody
-
-$loginBody = @{
-  email = "user@example.com"
-  password = "password123"
-} | ConvertTo-Json
-
-$loginResponse = Invoke-WebRequest http://localhost:8080/auth/login -Method POST -ContentType "application/json" -Body $loginBody
+curl -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password123"}'
 ```
 
 ## Local Development Commands
@@ -155,7 +149,7 @@ Base manifests live in `deploy/k8s/base` and are designed to stay simple and rea
 
 Apply the base with:
 
-```powershell
+```bash
 kubectl apply -k deploy/k8s/base
 ```
 
@@ -215,6 +209,9 @@ The migration runner:
 - applies SQL files in filename order
 - records each applied filename so it is not re-applied
 
+The runner is a bash script at `platform/scripts/migrate-up.sh`. It loads `.env`
+with standard shell syntax, so keep environment values in `KEY=value` form.
+
 ## Currently Working Endpoints
 
 - `GET /healthz`
@@ -243,7 +240,7 @@ The migration runner:
 - `platform/db/migrations/0001_create_scholarships.sql`
   Creates the initial `scholarships` table and its supporting index.
 
-- `platform/scripts/migrate-up.ps1`
+- `platform/scripts/migrate-up.sh`
   Runs ordered SQL migrations against the local PostgreSQL container and records applied versions.
 
 - `services/api/internal/app/app.go`

@@ -6,7 +6,7 @@ metadata:
 spec:
   description: Scholarship Platform MVP project
   sourceRepos:
-    - https://github.com/ohanyere/scholarship-platform-mvp.git
+    - https://github.com/ohanyere/scholarship-mvp.git
   destinations:
     - namespace: scholarship-platform
       server: https://kubernetes.default.svc

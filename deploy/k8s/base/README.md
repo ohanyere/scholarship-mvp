@@ -14,7 +14,7 @@ The base includes:
 
 Apply the base with:
 
-```powershell
+```bash
 kubectl apply -k deploy/k8s/base
 ```
 
