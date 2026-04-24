@@ -4,6 +4,9 @@ FROM golang:1.24.2-alpine3.21 AS builder
 
 WORKDIR /src
 
+# Alpine package pinning here would trade away easy security patch uptake for
+# two OS packages we install from the pinned Alpine 3.21 repository.
+# hadolint ignore=DL3018
 RUN apk add --no-cache ca-certificates tzdata
 
 COPY go.mod go.sum ./

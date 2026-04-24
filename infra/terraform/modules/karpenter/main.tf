@@ -27,6 +27,9 @@ resource "aws_iam_role" "controller" {
   tags = var.common_tags
 }
 
+# checkov:skip=CKV_AWS_288:Karpenter needs broad read access across EC2 pricing, subnet, AMI, and capacity APIs to discover launch options dynamically.
+# checkov:skip=CKV_AWS_290:Karpenter creates and terminates compute on demand, so these EC2 actions are intentionally wildcarded until workload-specific scoping is introduced.
+# checkov:skip=CKV_AWS_355:This controller policy is intentionally broader in the dev platform because Karpenter provisioning and discovery are not yet partitioned by dedicated IAM conditions.
 resource "aws_iam_role_policy" "controller" {
   name = "${var.cluster_name}-karpenter-controller"
   role = aws_iam_role.controller.id

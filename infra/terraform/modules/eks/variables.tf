@@ -25,6 +25,24 @@ variable "endpoint_public_access" {
   default     = true
 }
 
+variable "public_access_cidrs" {
+  description = "CIDR blocks allowed to reach the public EKS API endpoint."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
+variable "cluster_enabled_log_types" {
+  description = "Control plane log types enabled for the EKS cluster."
+  type        = list(string)
+  default = [
+    "api",
+    "audit",
+    "authenticator",
+    "controllerManager",
+    "scheduler"
+  ]
+}
+
 variable "node_instance_type" {
   description = "Managed node group instance type."
   type        = string

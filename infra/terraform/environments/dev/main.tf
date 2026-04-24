@@ -26,6 +26,9 @@ module "eks" {
   cluster_name       = var.cluster_name
   cluster_version    = var.cluster_version
   private_subnet_ids = module.vpc.private_subnet_ids
+  public_access_cidrs = [
+    "0.0.0.0/0"
+  ]
 
   node_instance_type = var.node_instance_type
   node_desired_size  = var.node_desired_size

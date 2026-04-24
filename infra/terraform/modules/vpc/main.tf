@@ -22,6 +22,7 @@ resource "aws_internet_gateway" "this" {
   )
 }
 
+# checkov:skip=CKV_AWS_130:Public subnets intentionally auto-assign public IPs because they host internet-facing load balancers in this dev platform.
 resource "aws_subnet" "public" {
   count = length(var.public_subnet_cidrs)
 
@@ -33,10 +34,10 @@ resource "aws_subnet" "public" {
   tags = merge(
     var.common_tags,
     {
-      Name                              = "${var.project_name}-public-${count.index + 1}"
+      Name                                        = "${var.project_name}-public-${count.index + 1}"
       "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-      "kubernetes.io/role/elb"          = "1"
-      "karpenter.sh/discovery"          = var.cluster_name
+      "kubernetes.io/role/elb"                    = "1"
+      "karpenter.sh/discovery"                    = var.cluster_name
     }
   )
 }
@@ -51,10 +52,10 @@ resource "aws_subnet" "private" {
   tags = merge(
     var.common_tags,
     {
-      Name                                      = "${var.project_name}-private-${count.index + 1}"
+      Name                                        = "${var.project_name}-private-${count.index + 1}"
       "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-      "kubernetes.io/role/internal-elb"         = "1"
-      "karpenter.sh/discovery"                  = var.cluster_name
+      "kubernetes.io/role/internal-elb"           = "1"
+      "karpenter.sh/discovery"                    = var.cluster_name
     }
   )
 }
@@ -128,4 +129,84 @@ resource "aws_route_table_association" "private" {
 
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
+}
+
+resource "aws_default_security_group" "this" {
+  vpc_id = aws_vpc.this.id
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-default-sg"
+    }
+  )
+}
+
+resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
+  name              = "/aws/vpc/${var.project_name}/flow-logs"
+  retention_in_days = 30
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-vpc-flow-logs"
+    }
+  )
+}
+
+resource "aws_iam_role" "vpc_flow_logs" {
+  name = "${var.project_name}-vpc-flow-logs-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "vpc-flow-logs.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = var.common_tags
+}
+
+resource "aws_iam_role_policy" "vpc_flow_logs" {
+  name = "${var.project_name}-vpc-flow-logs-policy"
+  role = aws_iam_role.vpc_flow_logs.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:PutLogEvents"
+        ]
+        Resource = "${aws_cloudwatch_log_group.vpc_flow_logs.arn}:*"
+      }
+    ]
+  })
+}
+
+resource "aws_flow_log" "this" {
+  iam_role_arn             = aws_iam_role.vpc_flow_logs.arn
+  log_destination          = aws_cloudwatch_log_group.vpc_flow_logs.arn
+  log_destination_type     = "cloud-watch-logs"
+  traffic_type             = "ALL"
+  vpc_id                   = aws_vpc.this.id
+  max_aggregation_interval = 60
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-vpc-flow-log"
+    }
+  )
 }

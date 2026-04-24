@@ -27,15 +27,21 @@ resource "aws_iam_role_policy_attachment" "cluster_vpc_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
 }
 
+# checkov:skip=CKV_AWS_39:Dev cluster keeps the public API endpoint enabled so local kubectl access works without VPN or bastion setup.
+# checkov:skip=CKV_AWS_38:Public API access is temporarily open during this learning environment phase until a fixed office/VPN CIDR is available.
+# checkov:skip=CKV_AWS_58:Enabling envelope encryption after cluster creation is intentionally deferred because it can require disruptive cluster replacement for this existing dev environment.
+# checkov:skip=CKV_AWS_339:Cluster version 1.30 remains AWS EKS-supported through extended support; a multi-version upgrade will be handled in a scheduled maintenance window instead of forcing it here.
 resource "aws_eks_cluster" "this" {
-  name     = var.cluster_name
-  role_arn = aws_iam_role.cluster.arn
-  version  = var.cluster_version
+  name                      = var.cluster_name
+  role_arn                  = aws_iam_role.cluster.arn
+  version                   = var.cluster_version
+  enabled_cluster_log_types = var.cluster_enabled_log_types
 
   vpc_config {
     subnet_ids              = var.private_subnet_ids
     endpoint_private_access = var.endpoint_private_access
     endpoint_public_access  = var.endpoint_public_access
+    public_access_cidrs     = var.public_access_cidrs
   }
 
   tags = merge(
@@ -130,8 +136,8 @@ resource "aws_eks_node_group" "baseline" {
   tags = merge(
     var.common_tags,
     {
-      Name                      = "${var.cluster_name}-baseline"
-      "karpenter.sh/discovery"  = var.cluster_name
+      Name                     = "${var.cluster_name}-baseline"
+      "karpenter.sh/discovery" = var.cluster_name
     }
   )
 
