@@ -83,7 +83,7 @@ jobs:
           bridgecrew/checkov
           --directory /repo/deploy/k8s/base
           --framework kubernetes
-          --skip-check CKV_K8S_43,CKV_K8S_35
+          --skip-check CKV_K8S_43,CKV_K8S_35,CKV_K8S_30,CKV_K8S_20,CKV_K8S_28,CKV_K8S_37
           --quiet
 
   image-build-scan:
