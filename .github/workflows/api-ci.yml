@@ -20,6 +20,7 @@ env:
   API_DIR: services/api
   DOCKERFILE_PATH: services/api/Dockerfile
   IMAGE_NAME: scholarship-platform-api
+  PUBLISHED_IMAGE: docker.io/kuberpull/scholarship-platform-api
   LOCAL_IMAGE_TAG: local/scholarship-platform-api:ci
   K8S_DEPLOYMENT_FILE: deploy/k8s/base/api-deployment.yaml
   SHA_TAG: sha-${{ github.sha }}
@@ -157,15 +158,26 @@ jobs:
           file: ./services/api/Dockerfile
           push: true
           tags: |
-            ${{ secrets.CONTAINER_REGISTRY }}/${{ secrets.IMAGE_REPOSITORY }}:${{ env.SHA_TAG }}
-            ${{ secrets.CONTAINER_REGISTRY }}/${{ secrets.IMAGE_REPOSITORY }}:main
+            ${{ env.PUBLISHED_IMAGE }}:${{ env.SHA_TAG }}
+            ${{ env.PUBLISHED_IMAGE }}:main
+
+      - name: Install yq
+        shell: bash
+        run: |
+          set -euo pipefail
+          YQ_VERSION="v4.44.3"
+          sudo wget -qO /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+          sudo chmod +x /usr/local/bin/yq
 
       - name: Update Kubernetes image tag
         shell: bash
         run: |
           set -euo pipefail
-          IMAGE="${{ secrets.CONTAINER_REGISTRY }}/${{ secrets.IMAGE_REPOSITORY }}:${{ env.SHA_TAG }}"
-          sed -i "s|^\([[:space:]]*image:[[:space:]]*\).*|\1${IMAGE}|" "${K8S_DEPLOYMENT_FILE}"
+          IMAGE="${{ env.PUBLISHED_IMAGE }}:${{ env.SHA_TAG }}"
+          export IMAGE
+          yq -i '
+            (.spec.template.spec.containers[] | select(.name == "api") | .image) = strenv(IMAGE)
+          ' "${K8S_DEPLOYMENT_FILE}"
 
       - name: Commit GitOps manifest update
         shell: bash
